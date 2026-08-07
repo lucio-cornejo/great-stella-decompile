@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How faceting works</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◇</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/controls.css?v=faceting-2">
+<script>
+  (() => {
+    const saved = localStorage.getItem('theme') || 'auto';
+    const dark = saved === 'dark' ||
+      (saved === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  })();
+</script>
+</head>
+<body class="guide-page">
+<header>
+  <a class="brand" href="index.html">◇ Faceting</a>
+  <div class="spacer"></div>
+  <a class="ghost" href="index.html">back to the app</a>
+</header>
+
+<main class="guide">
+  <article>
+    <h1>New faces, fixed vertices</h1>
+    <p class="lead">
+      A faceting of a polyhedron uses its existing vertices but joins them into
+      different face circuits. A pentagon becoming a pentagram is the planar
+      version: the five points stay put while the boundary changes.
+    </p>
+
+    <section>
+      <h2>The construction used here</h2>
+      <ol class="steps">
+        <li><b>Choose the base.</b> Its canonical vertex set is the one the
+          finished object must use.</li>
+        <li><b>Find coplanar circuits.</b> Maximal sets of three or more base
+          vertices define candidate planes. Angular step orders generate ordinary
+          polygons and single-component star polygons on those same points.</li>
+        <li><b>Repeat by symmetry.</b> The selected faceting group maps one seed
+          circuit into a complete facet orbit. The polar dual's plane arrangement
+          is shown alongside as the reciprocal faceting diagram.</li>
+        <li><b>Validate the result.</b> Every circuit must close and every
+          undirected edge must normally meet exactly two faces. Open or
+          multiply-shared edges are reported as non-tidy.</li>
+      </ol>
+      <p>
+        This is the geometric duality
+        <i>(stellation of P*)* = faceting of P</i>. The arrangement code is reused,
+        but the displayed vertices come from <i>P</i>, not from the stellation
+        mesh. That distinction is what makes this a faceting port rather than a
+        renamed stellation viewer.
+      </p>
+    </section>
+
+    <section>
+      <h2>Great Stella</h2>
+      <p>
+        The <b>Great Stella</b> shortcut uses the 20 vertices of the regular
+        dodecahedron and replaces its twelve pentagons with twelve pentagram
+        circuits. It is the great stellated dodecahedron shown in the brief.
+        The <b>base</b> shortcut restores the twelve ordinary pentagons without
+        moving a vertex.
+      </p>
+    </section>
+
+    <section>
+      <h2>Three linked views</h2>
+      <dl>
+        <dt>3D faceting</dt>
+        <dd>The final abstract face cycles on the fixed base vertices. Edges are
+          drawn from the cycles themselves, including pentagrams.</dd>
+        <dt>Faceting diagram</dt>
+        <dd>A representative plane of the reciprocal arrangement. Its regions
+          explain the dual construction around one vertex orbit. This view is a
+          read-only guide; selection happens in the orbit table or 3D view.</dd>
+        <dt>Construction table</dt>
+        <dd>Each numbered box is one symmetry orbit of explicit, coplanar
+          base-vertex circuits. Its colour records how many faces it generates.</dd>
+      </dl>
+    </section>
+
+    <section>
+      <h2>Controls</h2>
+      <dl>
+        <dt>base</dt>
+        <dd>Use the original face orbit of the chosen solid.</dd>
+        <dt>next orbit / all / clear</dt>
+        <dd>Walk to the next circuit family, or select every/none of the directly
+          enumerated facet orbits.</dd>
+        <dt>shift-click / ctrl-click</dt>
+        <dd>Add or remove one complete facet orbit. Plain clicks toggle it.</dd>
+        <dt>base symmetry / faceting symmetry</dt>
+        <dd>The first bounds the allowed subgroups and builds the reciprocal
+          diagram; the second groups direct circuits into selectable orbits.</dd>
+        <dt>diagram depth</dt>
+        <dd>Limits reciprocal plane intersections in the read-only diagram. It
+          does not change the base vertex set or direct circuit enumeration.</dd>
+      </dl>
+    </section>
+
+    <section>
+      <h2>Validity and limits</h2>
+      <p>
+        The app keeps explicit face cycles and reports circuit and edge incidence
+        checks. Self-intersecting star faces are intentional; repeated vertices
+        within one circuit, open edges, and more than two faces on an abstract
+        edge are not silently accepted as tidy.
+      </p>
+      <p>
+        Central reciprocal planes have points at infinity. When a source solid
+        contains them the status line reports the dropped planes instead of
+        presenting the depth-limited result as complete.
+      </p>
+    </section>
+
+    <footer>
+      The plane-arrangement core derives from Vladimir Bulatov's Great Stella
+      applet (1998–2001). This port adds the explicit polar-faceting model,
+      circuit validation, and fixed-vertex presets.
+    </footer>
+  </article>
+</main>
+</body>
+</html>
