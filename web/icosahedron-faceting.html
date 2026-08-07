@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Icosahedron F2 — faceting and dodecahedron stellation</title>
+<meta name="description" content="An interactive, computed proof that orbit F2 of the icosahedron is the small stellated dodecahedron: a faceting of the icosahedron and a stellation of the dodecahedron.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/icosahedron-faceting.css">
+<script>
+  (() => {
+    const saved = localStorage.getItem('theme') || 'auto';
+    const dark = saved === 'dark' ||
+      (saved === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.dataset.themePref = saved;
+  })();
+</script>
+</head>
+<body class="report-page">
+
+<header class="report-header">
+  <a class="report-brand" href="index.html">✦ Faceting lab</a>
+  <nav aria-label="Report sections">
+    <a href="#example">interactive example</a>
+    <a href="#algorithm">algorithm</a>
+    <a href="#sources">sources</a>
+  </nav>
+  <div class="spacer"></div>
+  <a class="ghost" href="index.html#u27/Ih/I/d2/{2}">open full app</a>
+  <button id="reportTheme" class="ghost icon" type="button" title="Light / dark">◐</button>
+</header>
+
+<main class="report-main">
+  <article>
+    <section class="hero">
+      <div class="eyebrow">ICOSAHEDRON CASE STUDY · DIRECT ORBIT F2</div>
+      <h1>One solid, two constructions</h1>
+      <p class="hero-lead">
+        The shape in your two selections is the <strong>small stellated
+        dodecahedron</strong>, the regular star polyhedron
+        <span class="math">{5/2, 5}</span>. It is simultaneously a stellation
+        of the regular dodecahedron and a faceting of the regular icosahedron.
+      </p>
+      <div class="identity-strip" aria-label="Small stellated dodecahedron summary">
+        <div><span>fixed vertices</span><b>12</b><small>the icosahedron's</small></div>
+        <div><span>star faces</span><b>12 × {5/2}</b><small>one orbit</small></div>
+        <div><span>abstract edges</span><b>30</b><small>two faces per edge</small></div>
+        <div><span>symmetry</span><b>I<sub>h</sub></b><small>order 120</small></div>
+      </div>
+      <div class="verdict">
+        <span class="verdict-mark">=</span>
+        <p>
+          <b>Dodecahedron stellation:</b> keep its 12 face planes and extend them.
+          <br>
+          <b>Icosahedron faceting:</b> keep its 12 vertices and reconnect them.
+        </p>
+      </div>
+    </section>
+
+    <section class="report-section terminology" id="numbering">
+      <div class="section-kicker">First: align the controls</div>
+      <h2>“Depth 2” and “F2” are interface labels, not the same index</h2>
+      <p>
+        The two screenshots describe the same boundary through different data.
+        In the stellation view, two depth bands are present: the core and its
+        first supported shell. In Bulatov's layer convention these are indexed
+        <span class="math">L0</span> and <span class="math">L1</span>. In the
+        direct faceting view, <span class="math">F2</span> means face-circuit
+        orbit ID 2. It is not “layer 2.”
+      </p>
+      <div class="number-map">
+        <div class="number-card stellation-card">
+          <span class="number-label">STELLATION UI</span>
+          <div class="mock-controls" aria-hidden="true">
+            <span class="mock-row active"><i></i><b>1</b><em>0</em></span>
+            <span class="mock-row active"><i></i><b>0</b><em>0</em></span>
+          </div>
+          <p><b>Two included depth bands</b><br>core L0 + supported shell L1</p>
+        </div>
+        <div class="map-arrow" aria-hidden="true">→</div>
+        <div class="number-card faceting-card">
+          <span class="number-label">DIRECT FACETING UI</span>
+          <div class="mock-orbits" aria-hidden="true">
+            <span>F</span><i>0</i><i>1</i><i class="active">2</i><i>3</i><i>4</i>
+          </div>
+          <p><b>One selected face orbit</b><br>F2 = twelve step-2 pentagrams</p>
+        </div>
+      </div>
+      <aside class="caution">
+        <b>Do not compare the numbers literally.</b> Direct faceting selection is
+        <code>{2}</code>; the dodecahedron cell selection is cumulative
+        <code>{0,1}</code>. The URL segment <code>d2</code> is only a
+        plane-intersection cutoff for the optional diagram. None of these is a
+        universal name; the stable mathematical name is
+        <i>small stellated dodecahedron</i>.
+      </aside>
+      <div class="state-links" aria-label="Exact comparison states">
+        <a href="https://yaroslavvb.github.io/stellation/#u28/Ih/I/d2/%7B0,1%7D" target="_blank" rel="noopener">
+          <span>DODECAHEDRON</span><b>Open the 3D stellation · {0,1}</b>
+        </a>
+        <a href="https://yaroslavvb.github.io/stellation-2d/#v=2&amp;mode=stellation&amp;n=5&amp;sym=D5&amp;st=0,1&amp;fa=2" target="_blank" rel="noopener">
+          <span>PENTAGON ANALOGUE</span><b>Open the 2D core + first shell</b>
+        </a>
+        <a href="index.html#u27/Ih/I/d2/{2}">
+          <span>ICOSAHEDRON</span><b>Open the direct 3D faceting · F2</b>
+        </a>
+      </div>
+    </section>
+
+    <section class="report-section" id="example">
+      <div class="section-kicker">Interactive computed example</div>
+      <h2>Facet the icosahedron without moving one vertex</h2>
+      <p>
+        Every button below is one orbit of coplanar circuits found directly on
+        the same normalized icosahedron vertex table. Orbit F2 is selected on
+        load. Drag the model to turn it; compare F1 and F2 to see that the five
+        coplanar points stay the same while only their traversal changes.
+      </p>
+
+      <div class="example-shell">
+        <div class="viewer-card">
+          <div class="viewer-head">
+            <div>
+              <span class="viewer-label">LIVE WEBGL · FIXED VERTEX TABLE U27</span>
+              <h3 id="activeName">Small stellated dodecahedron</h3>
+            </div>
+            <div class="viewer-actions">
+              <button id="viewFit" type="button">fit</button>
+              <button id="viewHome" type="button">home</button>
+              <button id="viewSpin" type="button" aria-pressed="false">spin</button>
+            </div>
+          </div>
+          <div class="solid-frame">
+            <canvas id="solid" aria-label="Interactive faceting of the icosahedron"></canvas>
+            <div id="webglFallback" class="webgl-fallback" hidden>
+              This interactive view needs WebGL2. The computation and report
+              remain available below.
+            </div>
+            <span class="drag-hint">drag to turn · wheel to zoom</span>
+          </div>
+          <div class="live-stats" aria-live="polite">
+            <span><b id="statV">12</b> V</span>
+            <span><b id="statE">30</b> E</span>
+            <span><b id="statF">12</b> F</span>
+            <span id="statTidy" class="check-state">tidy</span>
+          </div>
+        </div>
+
+        <div class="orbit-card">
+          <div class="orbit-head">
+            <span class="viewer-label">FACET CIRCUIT ORBITS</span>
+            <span class="mono">I · 60 rotations</span>
+          </div>
+          <div id="orbitButtons" class="orbit-buttons" aria-label="Choose a facet orbit"></div>
+
+          <div class="face-study">
+            <div id="faceDiagram" class="face-diagram" aria-label="Representative face circuit"></div>
+            <div>
+              <span class="viewer-label">REPRESENTATIVE CIRCUIT</span>
+              <h3 id="faceSymbol">{5/2} pentagram</h3>
+              <p id="faceExplanation">
+                Five coplanar vertices, connected by step 2 rather than around
+                the convex rim.
+              </p>
+              <code id="faceCycle">[1, 8, 0, 6, 3]</code>
+            </div>
+          </div>
+
+          <div class="orbit-note" id="orbitNote">
+            The F2 plane orbit has 12 members. Applying it produces the whole
+            regular star polyhedron, never a single loose face.
+          </div>
+          <a class="full-app-link" href="index.html#u27/Ih/I/d2/{2}">
+            Open this exact selection in the full faceting app →
+          </a>
+        </div>
+      </div>
+
+      <div class="certificate" id="certificate" aria-label="Runtime equivalence checks">
+        <div class="certificate-head">
+          <div>
+            <span class="viewer-label">COMPUTED IN THIS PAGE</span>
+            <h3>Equivalence certificate</h3>
+          </div>
+          <span id="certificateStatus" class="certificate-status">checking…</span>
+        </div>
+        <div class="certificate-grid">
+          <div><i id="checkVertices">·</i><span>Faceting preview reuses the exact 12-entry icosahedron vertex table</span></div>
+          <div><i id="checkCatalog">·</i><span>Metric/topology signature is congruent to catalog target U39</span></div>
+          <div><i id="checkPlanes">·</i><span>All 12 face normals match the dodecahedron's 12 face planes</span></div>
+          <div><i id="checkEdges">·</i><span>All 30 abstract edges have incidence two; every vertex is used</span></div>
+        </div>
+        <p id="certificateDetail" class="mono certificate-detail"></p>
+      </div>
+    </section>
+
+    <section class="report-section" id="equivalence">
+      <div class="section-kicker">Why the shapes coincide</div>
+      <h2>The same-vertices / same-planes proof</h2>
+
+      <div class="proof-grid">
+        <div class="proof-card">
+          <span class="proof-index">01</span>
+          <h3>Faceting fixes the icosahedron's vertices</h3>
+          <p>
+            Let <span class="math">φ=(1+√5)/2</span> and
+            <span class="math">c=1/√(1+φ²)</span>. The app's unit-circumradius
+            icosahedron is
+          </p>
+          <div class="formula">
+            V<sub>I</sub> = c · {(0, ±φ, ±1), (±φ, ±1, 0), (±1, 0, ±φ)}.
+          </div>
+          <p>
+            The direct engine copies this array by identity into every preview.
+            It may replace the 20 triangular circuits, but it cannot add, move,
+            merge, or delete a vertex.
+          </p>
+        </div>
+
+        <div class="proof-card">
+          <span class="proof-index">02</span>
+          <h3>Stellation fixes the dodecahedron's planes</h3>
+          <p>
+            The 12 outward unit normals of the dodecahedron's faces are exactly
+            the 12 vectors in <span class="math">V<sub>I</sub></span>. Its
+            normalized face planes are
+          </p>
+          <div class="formula">
+            n<sub>i</sub> · x = r<sub>D</sub>, &nbsp;
+            r<sub>D</sub> = √((5 + 2√5) / 15).
+          </div>
+          <p>
+            Stellation extends those planes indefinitely and chooses supported
+            regions of the arrangement; the plane set does not change.
+          </p>
+        </div>
+
+        <div class="proof-card wide">
+          <span class="proof-index">03</span>
+          <h3>Orbit F2 satisfies both constraints at once</h3>
+          <p>
+            On each of 12 planes, the engine finds five points of
+            <span class="math">V<sub>I</sub></span>. Connecting every second
+            point makes a regular pentagram. The F2 support distance at the
+            app's icosahedron scale is
+            <span class="math">r<sub>F2</sub>=1/√5</span>. Uniformly scaling the
+            result by
+          </p>
+          <div class="formula accent-formula">
+            λ = r<sub>D</sub> / r<sub>F2</sub>
+              = √((5 + 2√5) / 3)
+              ≈ 1.7769014187
+          </div>
+          <p>
+            makes every F2 face plane coincide with a face plane of the original
+            dodecahedron. So, up to the separate viewers' normalization, the F2
+            result uses the icosahedron's vertices <em>and</em> the extended
+            dodecahedron's planes. That is the claimed shape equivalence.
+          </p>
+        </div>
+      </div>
+
+      <aside class="duality-note">
+        <h3>A useful precision about duality</h3>
+        <p>
+          The icosahedron and dodecahedron are polar duals, which explains why
+          dodecahedral face normals and icosahedral vertex directions are the
+          same data. But the small stellated dodecahedron is not self-dual: its
+          polar dual is the <em>great dodecahedron</em>. Calling the small
+          stellated dodecahedron both a stellation and a faceting is a direct
+          same-planes/same-vertices statement, not a claim that dualization
+          leaves it unchanged.
+        </p>
+      </aside>
+    </section>
+
+    <section class="report-section" id="algorithm">
+      <div class="section-kicker">How F2 is computed here</div>
+      <h2>From 12 points to one complete pentagram orbit</h2>
+      <ol class="algorithm-steps">
+        <li>
+          <span>1</span>
+          <div>
+            <h3>Normalize the fixed base</h3>
+            <p>
+              Read U27, the regular icosahedron: 12 vertices and 20 triangular
+              faces. The faces seed the “base” preset, but only the vertex table
+              is immutable during faceting.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span>2</span>
+          <div>
+            <h3>Enumerate coplanar vertex sets</h3>
+            <p>
+              Test the <span class="math">C(12,3)=220</span> vertex triples.
+              Canonicalize each nondegenerate plane and merge numerically equal
+              planes. The icosahedral table yields <b>67 distinct planes</b>.
+              All base vertices lying within the plane tolerance are collected.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span>3</span>
+          <div>
+            <h3>Generate closed angular-step circuits</h3>
+            <p>
+              Project each coplanar set into a local 2D basis, sort around its
+              centroid, and walk by constant step <span class="math">k</span>.
+              A step is a single circuit when
+              <span class="math">gcd(n,k)=1</span>. Ordinary and star traversals
+              together produce <b>79 explicit circuits</b>.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span>4</span>
+          <div>
+            <h3>Quotient by icosahedral symmetry</h3>
+            <p>
+              Map the circuits through the 60 proper rotations of group
+              <span class="math">I</span> and canonicalize their vertex cycles.
+              This partitions the 79 candidates into the five selectable
+              orbits F0–F4 shown below.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span>5</span>
+          <div>
+            <h3>Select F2 and validate globally</h3>
+            <p>
+              Seed circuit <code>[1,8,0,6,3]</code> is a five-point, step-2 star.
+              Its orbit has 12 faces. Build all 12 at once, deduplicate the
+              undirected circuit edges, and verify that every edge has two
+              incident faces and every fixed vertex participates.
+            </p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="orbit-table-wrap">
+        <table class="orbit-report-table">
+          <thead>
+            <tr><th>Orbit</th><th>Members</th><th>Circuit</th><th>Plane radius</th><th>Single-orbit result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><b>F0</b></td><td>20 faces</td><td>{3}</td><td>0.7946544723</td><td>icosahedron</td></tr>
+            <tr><td><b>F1</b></td><td>12 faces</td><td>{5}</td><td>1/√5</td><td>great dodecahedron</td></tr>
+            <tr class="target-row"><td><b>F2</b></td><td>12 faces</td><td>{5/2}</td><td>1/√5</td><td>small stellated dodecahedron</td></tr>
+            <tr><td><b>F3</b></td><td>15 faces</td><td>central {4}</td><td>0</td><td>open / non-manifold orbit</td></tr>
+            <tr><td><b>F4</b></td><td>20 faces</td><td>inner {3}</td><td>0.1875924741</td><td>great icosahedron</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="topology-note">
+        <h3>Why V − E + F = −6 is not an error</h3>
+        <p>
+          For F2 the raw incidence count is
+          <span class="math">12 − 30 + 12 = −6</span>. Euler's familiar value 2
+          assumes the boundary of a convex ball (or, more generally, a sphere).
+          Here each face is a self-intersecting pentagram and faces pass through
+          one another. The engine's “tidy” check asks the relevant circuit
+          question—does every abstract edge belong to exactly two faces?—and
+          that check passes. Apparent line crossings inside a pentagram are not
+          extra vertices or edges.
+        </p>
+      </div>
+    </section>
+
+    <section class="report-section" id="stellation-computation">
+      <div class="section-kicker">How the stellation side is computed</div>
+      <h2>Face planes divide space into supported cells</h2>
+      <div class="cell-flow" aria-label="Stellation computation flow">
+        <div><b>12 dodecahedron faces</b><span>extend each to an infinite plane</span></div>
+        <i>→</i>
+        <div><b>plane arrangement</b><span>intersections bound elementary cells</span></div>
+        <i>→</i>
+        <div><b>symmetry orbits</b><span>equivalent cells move together</span></div>
+        <i>→</i>
+        <div><b>supported boundary</b><span>core + first shell exposes pentagrams</span></div>
+      </div>
+      <p>
+        Bulatov defines a cell's layer number as the number of stellation planes
+        crossed by a ray from the core to an interior point of that cell. Layer
+        0 is the core. A cell is supported when every lower facet has an adjacent
+        selected cell. The “+ layer” operation therefore adds a complete shell,
+        not merely a set of disconnected spikes. Reading the boundary of the
+        core-plus-first-shell selection gives the same 12 pentagram supporting
+        planes certified above.
+      </p>
+      <p>
+        This is why the two algorithms look so different. Stellation computes
+        bounded <em>volumes</em> in a plane arrangement and then extracts their
+        boundary. Direct faceting computes coplanar <em>circuits</em> on a fixed
+        point set. They converge here because dodecahedral planes and
+        icosahedral vertex directions are reciprocal.
+      </p>
+    </section>
+
+    <section class="report-section sources" id="sources">
+      <div class="section-kicker">References and provenance</div>
+      <h2>Sources used for the report</h2>
+      <div class="source-list">
+        <a href="https://doi.org/10.1098/rsta.1954.0003" target="_blank" rel="noopener">
+          <span>Coxeter, Longuet-Higgins &amp; Miller · Phil. Trans. R. Soc. A (1954)</span>
+          <b>Uniform Polyhedra</b>
+          <small>The canonical regular/uniform star-polyhedron classification and notation.</small>
+        </a>
+        <a href="https://doi.org/10.1107/S0567739474001306" target="_blank" rel="noopener">
+          <span>N. J. Bridge · Acta Crystallographica A30 (1974)</span>
+          <b>Faceting the Dodecahedron</b>
+          <small>Primary definitions for facetings, incidence, star-polygon crossings, and reciprocal polyhedra.</small>
+        </a>
+        <a href="https://doi.org/10.1098/rsta.2017.0323" target="_blank" rel="noopener">
+          <span>Conrad, Chamberland, Breuckmann &amp; Terhal · Royal Society (2018)</span>
+          <b>The Small Stellated Dodecahedron</b>
+          <small>An independent technical construction with twelve weight-five vertices/faces and 30 edges.</small>
+        </a>
+        <a href="https://doi.org/10.1107/S0108767390010054" target="_blank" rel="noopener">
+          <span>Daniel B. Litvin · Acta Crystallographica A47 (1991)</span>
+          <b>The Icosahedral Point Groups</b>
+          <small>Coordinate and symmetry-group foundation for the 12-point icosahedral orbit.</small>
+        </a>
+        <a href="https://www.software3d.com/SmallStelDod.php" target="_blank" rel="noopener">
+          <span>Robert Webb · Stella</span>
+          <b>Small Stellated Dodecahedron</b>
+          <small>12 faces, 30 edges, 12 vertices; explicitly identifies both constructions.</small>
+        </a>
+        <a href="https://www.cambridge.org/core/books/polyhedron-models/10671EF05A56A5697C670A4C0E973ACF/listing" target="_blank" rel="noopener">
+          <span>Magnus J. Wenninger · Cambridge University Press</span>
+          <b>Polyhedron Models</b>
+          <small>Defines faceting as a reverse of stellating and derives the small star from an icosahedral case.</small>
+        </a>
+        <a href="https://bulatov.org/polyhedra/StellationWithVariousSymmetries/" target="_blank" rel="noopener">
+          <span>Vladimir Bulatov</span>
+          <b>Interactive Creation of Polyhedra Stellations</b>
+          <small>Formal cell layers, symmetry orbits, support, and the original applet workflow.</small>
+        </a>
+        <a href="https://www.georgehart.com/virtual-polyhedra/stellations-info.html" target="_blank" rel="noopener">
+          <span>George W. Hart · Virtual Polyhedra</span>
+          <b>Stellations</b>
+          <small>Extending dodecahedron face planes and the sequence of its regular stellations.</small>
+        </a>
+        <a href="https://www.steelpillow.com/polyhedra/icosa/stelfacet/StelFacet.html" target="_blank" rel="noopener">
+          <span>Guy Inchbald · Symmetry: Culture and Science 11 (2000)</span>
+          <b>Towards Stellating the Icosahedron and Facetting the Dodecahedron</b>
+          <small>Polar reciprocity and the exact one-to-one relationship between stellations and facetings.</small>
+        </a>
+        <a href="https://link.springer.com/book/10.1007/978-1-4613-8216-4" target="_blank" rel="noopener">
+          <span>Coxeter, du Val, Flather &amp; Petrie</span>
+          <b>The Fifty-Nine Icosahedra</b>
+          <small>The classical face- and cell-enumeration framework for polyhedral stellation.</small>
+        </a>
+      </div>
+      <p class="provenance">
+        The numerical certificate is computed from this repository's canonical
+        U27, U28, and U39 tables. The direct candidate engine and renderer are
+        the same modules used by the main app; no screenshot geometry is traced
+        or hand-authored.
+      </p>
+    </section>
+
+    <footer class="report-footer">
+      <div>
+        <b>Small stellated dodecahedron · {5/2,5}</b>
+        <span>interactive faceting report</span>
+      </div>
+      <div class="footer-links">
+        <a href="index.html#u27/Ih/I/d2/{2}">full F2 app</a>
+        <a href="controls.html">faceting guide</a>
+        <a href="https://github.com/yaroslavvb/great-stella-decompile">source on GitHub</a>
+      </div>
+    </footer>
+  </article>
+</main>
+
+<script type="module" src="js/icosahedron-example.js"></script>
+</body>
+</html>

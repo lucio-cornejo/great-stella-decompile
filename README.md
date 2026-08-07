@@ -6,6 +6,9 @@ polyhedron's vertices and replaces its faces with explicit closed circuits.
 
 Live site: <https://yaroslavvb.github.io/great-stella-decompile/>
 
+Interactive F² case study:
+<https://yaroslavvb.github.io/great-stella-decompile/icosahedron-faceting.html>
+
 The supplied target is available from the **Great Stella** button: twelve
 pentagrams on the twenty canonical vertices of a dodecahedron. The resulting
 geometry and abstract face topology match the catalog's great stellated
