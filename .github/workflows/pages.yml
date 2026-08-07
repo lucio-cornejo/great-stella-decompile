@@ -34,7 +34,6 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: web
-          include-hidden-files: true
 
       - name: Deploy
         id: deployment
