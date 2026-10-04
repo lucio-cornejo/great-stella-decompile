@@ -11,14 +11,16 @@ const [catalog, geometry, symmetry] = await Promise.all([
 
 const proper = { Ih: 'I', I: 'I', Oh: 'O', O: 'O', Td: 'T', Th: 'T', T: 'T' };
 const items = catalog.flatMap(section => section.items);
-assert.equal(items.length, 121, 'visible catalog size');
+assert.equal(items.length, 258, 'visible catalog size');
+assert.equal(items.filter(item => item.nobleSymbol).length, 146, 'complete finite noble classification');
 
 let exhaustive = 0, nativeOnly = 0;
 const started = performance.now();
 for (const item of items) {
   const group = proper[item.symmetry] || item.symmetry;
   const engine = createFacetingEngine(geometry[item.file], symmetry[group]?.matrices || []);
-  engine.mode === 'native-only' ? nativeOnly++ : exhaustive++;
+  if (!item.file.startsWith('n_'))
+    engine.mode === 'native-only' ? nativeOnly++ : exhaustive++;
 
   const wanted = new Set(engine.poly.faces.map(canonicalCircuit));
   const byKey = new Map(engine.candidates.map(candidate => [candidate.key, candidate]));
@@ -40,4 +42,4 @@ for (const item of items) {
 
 assert.equal(exhaustive, 92, 'exhaustive catalog models');
 assert.equal(nativeOnly, 29, 'lossless native-only fallbacks');
-console.log(`catalog tests passed: 121 bases (${exhaustive} exhaustive, ${nativeOnly} native-only) in ${((performance.now() - started) / 1000).toFixed(1)}s`);
+console.log(`catalog tests passed: ${items.length} bases (original catalog: ${exhaustive} exhaustive, ${nativeOnly} native-only) in ${((performance.now() - started) / 1000).toFixed(1)}s`);

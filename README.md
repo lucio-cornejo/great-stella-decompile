@@ -45,12 +45,19 @@ polarize into a tidy faceting.
 
 ## Catalog coverage
 
-All 121 catalog bases restore their exact native face circuits and pass the
-closed-manifold/uses-all-vertices checks. Ninety-two small and medium vertex
-sets expose exhaustive coplanar circuit families. Twenty-nine difficult models
-(large vertex tables or native faces lying inside larger coplanar sets) switch
-to a clearly labelled **native-only** mode: the base remains exact, while the
-app does not pretend that a broader faceting enumeration is complete.
+All 258 catalog bases restore their exact native face circuits and pass the
+closed-manifold/uses-all-vertices checks. The original 121-model catalog retains
+its 92 exhaustive circuit searches and 29 clearly labelled **native-only**
+fallbacks. Another 137 entries complete Connor Hill's 146-member finite noble
+polyhedron classification (the nine regular examples were already present).
+New models use the same faceting engine and native-only fallback when needed;
+the app does not pretend that a broader circuit enumeration is complete.
+
+The four noble models with fissary duals keep their exact native faces but
+explicitly disable the reciprocal diagram. Infinite disphenoid and stephanoid
+families are not enumerated. See [`web/data/nobles.md`](web/data/nobles.md) for
+source revision, coordinate/dual alignment, Appendix corrections, and the
+separate GPLv3 license of the imported model data and derived thumbnails.
 
 Run the regression suites with:
 
@@ -59,6 +66,7 @@ node web/test/faceting.mjs
 node web/test/validate.mjs
 node web/test/preset.mjs
 node web/test/catalog.mjs
+node web/test/nobles.mjs
 ```
 
 ## Files
@@ -69,6 +77,8 @@ node web/test/catalog.mjs
 - `web/js/render3d.js` — WebGL face-cycle and edge rendering
 - `web/js/core.js` — the tested reciprocal plane-arrangement core
 - `web/data/geometry.json` — canonical catalog geometry
+- `web/data/catalog.json` — names, symmetry groups, noble symbols and explicit duals
+- `web/data/nobles.md` — noble model sources, conversion notes, and asset licensing
 - `web/test/` — algorithm and regression tests
 
 ## Provenance

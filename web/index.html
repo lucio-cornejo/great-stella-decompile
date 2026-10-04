@@ -54,7 +54,7 @@
       <div class="view">
         <canvas id="diagram"></canvas>
         <div class="view-label">
-          <span>reciprocal faceting diagram · read-only guide · drag to pan · double-click resets</span>
+          <span id="diagramNote">reciprocal faceting diagram · read-only guide · drag to pan · double-click resets</span>
           <span id="hover2d" class="hover"></span>
         </div>
       </div>
@@ -177,7 +177,7 @@
 
 <dialog id="catalogDialog">
   <div class="cat-head">
-    <input id="search" type="search" placeholder="Search 121 base solids by name, file or symmetry…" autocomplete="off">
+    <input id="search" type="search" placeholder="Search base solids by name, file or symmetry…" autocomplete="off">
     <button id="catalogClose" class="ghost">Close</button>
   </div>
   <nav id="catChips" class="cat-chips"></nav>
@@ -225,6 +225,16 @@
     <a href="http://bulatov.org/polyhedra/stellation_applet/" target="_blank" rel="noopener">Vladimir Bulatov</a>
     in 1998–2001 and checked number-for-number against the Java implementation.
     This mirror adds the polar-reciprocal faceting layer.
+  </p>
+  <p>
+    The catalog includes all 146 finite nonprismatic noble polyhedra from
+    <a href="https://arxiv.org/abs/2607.28711" target="_blank" rel="noopener">Connor Hill’s 2026 enumeration</a>:
+    nine existing regular models and 137 additions from his
+    <a href="https://github.com/Plasmath/noble-tools-revised" target="_blank" rel="noopener">model library</a>.
+    Imported model data and derived thumbnails are provided under
+    <a href="data/nobles-GPL-3.0.txt">GPLv3</a>, without warranty;
+    <a href="data/nobles.md">source and conversion notes</a>.
+    Disphenoid and stephanoid families are not enumerated in this finite catalog.
   </p>
   <p class="note">Build <span id="buildStamp" class="mono"></span></p>
   <button id="helpClose">close</button>

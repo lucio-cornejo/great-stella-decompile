@@ -25,7 +25,7 @@ const $$ = sel => [...document.querySelectorAll(sel)];
  * app.js and there was no way to tell from the screen. `_headers` stops that
  * happening; this makes it checkable when it does.
  */
-export const BUILD = '2026-08-07 · reciprocal faceting port';
+export const BUILD = '2026-10-04 · noble polyhedra catalog';
 
 const state = {
   catalog: null, symmetry: null, geometry: null,
@@ -85,6 +85,7 @@ async function boot() {
     fetch('data/geometry.json').then(r => r.json()),
   ]);
   Object.assign(state, { catalog, symmetry, geometry });
+  $('#search').placeholder = `Search ${catalog.reduce((n, section) => n + section.items.length, 0)} base solids by name, file or symmetry…`;
 
   try {
     renderer = new Renderer3D($('#view3d'));
@@ -198,6 +199,8 @@ const REGULAR_DUAL = {
 };
 
 function dualFile(file) {
+  const item = findItem(file);
+  if (item && 'dual' in item) return item.dual; // null explicitly marks a fissary dual
   if (REGULAR_DUAL[file]) return REGULAR_DUAL[file];
   if (/^u\d+$/.test(file)) return 'd' + file.slice(1);
   if (/^d\d+$/.test(file)) return 'u' + file.slice(1);
@@ -361,10 +364,10 @@ function onHover3D(hit, mod) {
 /*
  * The catalog is a specimen sheet: nothing but thumbnails, densely packed, with
  * the name of whatever you are pointing at spelled out along the bottom. Names
- * under every tile would triple the height and turn 121 solids into a scroll.
+ * under every tile would triple the height and turn the catalog into a scroll.
  *
- * It is built the first time the picker opens rather than at start-up — 121
- * thumbnails is about half a megabyte, which has no business delaying the first
+ * It is built the first time the picker opens rather than at start-up — the
+ * thumbnails have no business delaying the first
  * render of the solid. Built that late, the images can load eagerly, so the
  * sheet never shows the half-filled grid lazy loading gives you inside a dialog.
  */
@@ -401,11 +404,11 @@ function buildCatalog() {
       const b = document.createElement('button');
       b.className = 'poly';
       b.dataset.file = item.file;
-      b.dataset.name = item.name;
+      b.dataset.name = `${item.name} ${item.nobleSymbol || ''}`;
       b.dataset.sym = item.symmetry;
       b.dataset.cat = cat.category;
       b.setAttribute('aria-label', item.name);
-      b.innerHTML = `<img src="img/poly/${item.file}_tmb.gif" alt="" width="46" height="46">`;
+      b.innerHTML = `<img src="${thumbnail(item)}" alt="" width="46" height="46">`;
       b.onmouseenter = () => showFoot(item, cat.category);
       b.onfocus = () => showFoot(item, cat.category);
       b.onclick = () => {
@@ -423,16 +426,20 @@ function buildCatalog() {
   updateCatCount();
 }
 
+const thumbnail = item => item.thumbnail || `img/poly/${item.file}_tmb.gif`;
+
 function showFoot(item, category) {
   if (!item) return;
-  $('#footThumb').src = `img/poly/${item.file}_tmb.gif`;
+  $('#footThumb').src = thumbnail(item);
   $('#footName').textContent = item.name;
-  $('#footMeta').textContent = `${item.file} · ${item.symmetry} · ${category || ''}`;
+  $('#footMeta').textContent = [item.file, item.symmetry, item.nobleSymbol,
+    item.schlafli, item.dualSymbol && `dual ${item.dualSymbol}`, category].filter(Boolean).join(' · ');
 }
 
 function updateCatCount() {
-  const vis = $$('.poly').filter(b => b.style.display !== 'none').length;
-  $('#footCount').textContent = vis === 121 ? '121 solids' : `${vis} of 121`;
+  const items = $$('.poly');
+  const vis = items.filter(b => b.style.display !== 'none').length;
+  $('#footCount').textContent = vis === items.length ? `${vis} solids` : `${vis} of ${items.length}`;
 }
 
 // ------------------------------------------------------------------ selection
@@ -446,11 +453,14 @@ async function select(item, opts = {}) {
 
   $$('.poly').forEach(b => b.classList.toggle('active', b.dataset.file === item.file));
   $('#pickName').textContent = item.name;
-  $('#pickThumb').src = `img/poly/${item.file}_tmb.gif`;
+  $('#pickThumb').src = thumbnail(item);
+  $('#depth').disabled = $('#showAllFacets').disabled = state.dualFile === null;
+  $('#diagramNote').textContent = item.reciprocalNote ||
+    'reciprocal faceting diagram · read-only guide · drag to pan · double-click resets';
 
   if (opts.depth != null) {
     setDepth(opts.depth, false);           // an opened document or a link fixes it
-  } else if (state.depthAuto) {
+  } else if (state.depthAuto && state.dualFile !== null) {
     setDepth(suggestDepth(facePlanes(toPoly(state.geometry[state.dualFile]))), true);
   }
 
@@ -694,18 +704,24 @@ async function build(cellsString, preset = null) {
   setBuildControlsDisabled(true);
   setStatus('enumerating fixed-vertex facet circuits…', true);
 
-  const g = state.geometry[state.dualFile];
+  const sourceDual = state.geometry[state.dualFile];
+  // Some chiral library duals use the opposite handedness, but the diagram
+  // must share the selected base's frame. Central inversion commutes with I/O.
+  const g = state.current.dualInverted && sourceDual
+    ? { v: sourceDual.v.map(x => -x), f: sourceDual.f } : sourceDual;
   renderer?.resetScale();      // a new arrangement re-frames; edits within one do not
   clearHistory();              // a different arrangement: nothing earlier applies
   const polyM = state.symmetry[state.polySym]?.matrices || state.symmetry.E.matrices;
   const subM = state.symmetry[state.stellSym]?.matrices || null;
 
   try {
-    if (!g) throw new Error(`the catalog has no dual geometry for ${state.current.file}`);
+    if (!g && state.dualFile !== null)
+      throw new Error(`the catalog has no dual geometry for ${state.current.file}`);
     const baseGeometry = state.geometry[state.current.file];
     if (!baseGeometry) throw new Error(`the catalog has no base geometry for ${state.current.file}`);
     const info = await call('build', {
       geometry: g, baseGeometry, matrices: polyM, subMatrices: subM,
+      skipReciprocal: state.dualFile === null,
       maxIntersection: state.depth >= NO_LIMIT ? -1 : state.depth, maxLayer: 1000,
     }, ({ done, total }) => {
       if (generation === buildGeneration)
@@ -739,8 +755,10 @@ async function build(cellsString, preset = null) {
     const orbitReport = info.diagnostics.partialCandidates
       ? `${info.diagnostics.orbitCount} native face orbits (exact base; broader circuit search limited)`
       : `${info.diagnostics.orbitCount} facet orbits from ${info.facetCandidates.toLocaleString()} circuits`;
+    const diagramReport = info.diagnostics.diagramAvailable
+      ? `${planeReport(info)} in the reciprocal diagram` : 'reciprocal diagram unavailable (fissary dual)';
     setStatus(`${orbitReport} · ` +
-              `${planeReport(info)} in the reciprocal diagram · ${(info.ms / 1000).toFixed(info.ms > 5000 ? 1 : 3)} s` +
+              `${diagramReport} · ${(info.ms / 1000).toFixed(info.ms > 5000 ? 1 : 3)} s` +
               (slow ? ' — lower the depth for a quicker rebuild' : ''), false);
     const dropped = (info.planesCentral || 0) + (info.planesDegenerate || 0);
     const dropNote = dropped
@@ -751,7 +769,7 @@ async function build(cellsString, preset = null) {
     const fallbackNote = info.diagnostics.partialCandidates
       ? `Facet candidates are limited to the catalog's exact native face circuits: ${info.diagnostics.fallbackReason || 'exhaustive search unavailable'}.`
       : '';
-    $('#status').title = [fallbackNote, dropNote].filter(Boolean).join(' ');
+    $('#status').title = [fallbackNote, dropNote, state.current.reciprocalNote].filter(Boolean).join(' ');
     return true;
   } catch (err) {
     if (generation !== buildGeneration) return false;
@@ -830,8 +848,9 @@ function fillFaceSelect(faces) {
   state.faces = Array.isArray(faces) ? faces : [];
   const sel = $('#planeIndex');
   if (!sel) return;
+  sel.disabled = !state.faces.length;
   if (!state.faces.length) {
-    sel.innerHTML = '<option value="0">the only face</option>';
+    sel.innerHTML = '<option value="0">diagram unavailable</option>';
     state.planeIndex = 0;
     return;
   }
@@ -1014,8 +1033,7 @@ function wireControls() {
     updateCatCount();
     const first = $$('.poly').find(b => b.style.display !== 'none');
     if (q && first) {
-      showFoot({ name: first.dataset.name, file: first.dataset.file, symmetry: first.dataset.sym },
-               first.dataset.cat);
+      showFoot(findItem(first.dataset.file), first.dataset.cat);
     } else if (q && !first) {
       $('#footThumb').removeAttribute('src');
       $('#footName').textContent = 'nothing matches';
@@ -1195,7 +1213,8 @@ function setBuildControlsDisabled(disabled) {
     '#exportObj', '#exportStl', '#exportStel', '#exportSvg', '#exportPng',
   ]) {
     const el = $(id);
-    if (el) el.disabled = disabled;
+    if (el) el.disabled = disabled ||
+      (state.dualFile === null && ['#exportSvg', '#exportStel'].includes(id));
   }
   if ($('#cells')) $('#cells').style.pointerEvents = disabled ? 'none' : '';
 }

@@ -171,6 +171,7 @@ function meshFor(selected) {
  * read-only: its old cell references do not correspond to direct facet orbits.
  */
 function diagramFor(planeIndex) {
+  if (!stel) return null;
   const d = createDiagram(stel, planeIndex, [], 0);
   if (!d) return null;
   return {
@@ -231,8 +232,9 @@ self.onmessage = (e) => {
       case 'build': {
         const {
           geometry, baseGeometry, matrices, subMatrices, maxIntersection, maxLayer,
+          skipReciprocal = false,
         } = payload;
-        if (!geometry) throw new TypeError('reciprocal geometry is required');
+        if (!geometry && !skipReciprocal) throw new TypeError('reciprocal geometry is required');
         if (!baseGeometry) throw new TypeError('baseGeometry is required for direct faceting');
 
         const t0 = performance.now();
@@ -269,7 +271,8 @@ self.onmessage = (e) => {
           validation: validationSummary(engine.preview(baseOrbitIds).validation),
         };
 
-        stel = buildStellation(toPoly(geometry), matrices, {
+        // Fissary duals have coincident vertices; do not invent a reciprocal solid.
+        stel = skipReciprocal ? null : buildStellation(toPoly(geometry), matrices, {
           subMatrices, maxIntersection, maxLayer,
           onProgress: (done, total) =>
             self.postMessage({ id, progress: { done, total } }),
@@ -280,15 +283,15 @@ self.onmessage = (e) => {
         const presets = engine.presets.map(presetSummary);
         reply({
           // Reciprocal diagram metadata retained for the existing controls.
-          planes: stel.planes.length,
-          planesTotal: stel.planes.total ?? stel.planes.length,
-          planesCentral: stel.planes.central ?? 0,
-          planesDegenerate: stel.planes.degenerate ?? 0,
-          planesDuplicate: stel.planes.duplicate ?? 0,
-          faces: diagramFaces(stel, subMatrices || matrices),
-          maxRadius: stel.maxRadius,
-          diagramLayers: stel.cellLayers.length,
-          diagramFacets: stel.arrangement.reduce((sum, a) => sum + a.length, 0),
+          planes: stel?.planes.length ?? 0,
+          planesTotal: stel?.planes.total ?? stel?.planes.length ?? 0,
+          planesCentral: stel?.planes.central ?? 0,
+          planesDegenerate: stel?.planes.degenerate ?? 0,
+          planesDuplicate: stel?.planes.duplicate ?? 0,
+          faces: stel ? diagramFaces(stel, subMatrices || matrices) : [],
+          maxRadius: stel?.maxRadius ?? 0,
+          diagramLayers: stel?.cellLayers.length ?? 0,
+          diagramFacets: stel?.arrangement.reduce((sum, a) => sum + a.length, 0) ?? 0,
 
           // Direct faceting metadata.
           layers: 1,
@@ -303,6 +306,7 @@ self.onmessage = (e) => {
           baseKeys: selectionKeys(baseOrbitIds),
           allKeys: selectionKeys(engine.orbits.map(o => o.id)),
           diagnostics: {
+            diagramAvailable: Boolean(stel),
             fixedVertexCount: engine.vertices.length,
             planeCount: engine.planes.length,
             candidateCount: engine.candidates.length,
